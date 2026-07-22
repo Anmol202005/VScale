@@ -276,6 +276,12 @@ func (*HealthRequest) Descriptor() ([]byte, []int) {
 type HealthResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Healthy       bool                   `protobuf:"varint,1,opt,name=healthy,proto3" json:"healthy,omitempty"`
+	Cell          string                 `protobuf:"bytes,2,opt,name=cell,proto3" json:"cell,omitempty"`
+	Uid           uint32                 `protobuf:"varint,3,opt,name=uid,proto3" json:"uid,omitempty"`
+	Keyspace      string                 `protobuf:"bytes,4,opt,name=keyspace,proto3" json:"keyspace,omitempty"`
+	Shard         string                 `protobuf:"bytes,5,opt,name=shard,proto3" json:"shard,omitempty"`
+	TabletType    string                 `protobuf:"bytes,6,opt,name=tablet_type,json=tabletType,proto3" json:"tablet_type,omitempty"`
+	Alias         string                 `protobuf:"bytes,7,opt,name=alias,proto3" json:"alias,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -317,6 +323,48 @@ func (x *HealthResponse) GetHealthy() bool {
 	return false
 }
 
+func (x *HealthResponse) GetCell() string {
+	if x != nil {
+		return x.Cell
+	}
+	return ""
+}
+
+func (x *HealthResponse) GetUid() uint32 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
+}
+
+func (x *HealthResponse) GetKeyspace() string {
+	if x != nil {
+		return x.Keyspace
+	}
+	return ""
+}
+
+func (x *HealthResponse) GetShard() string {
+	if x != nil {
+		return x.Shard
+	}
+	return ""
+}
+
+func (x *HealthResponse) GetTabletType() string {
+	if x != nil {
+		return x.TabletType
+	}
+	return ""
+}
+
+func (x *HealthResponse) GetAlias() string {
+	if x != nil {
+		return x.Alias
+	}
+	return ""
+}
+
 var File_proto_tablet_tablet_proto protoreflect.FileDescriptor
 
 const file_proto_tablet_tablet_proto_rawDesc = "" +
@@ -335,9 +383,16 @@ const file_proto_tablet_tablet_proto_rawDesc = "" +
 	"\rrows_affected\x18\x04 \x01(\x03R\frowsAffected\"\x1d\n" +
 	"\x03Row\x12\x16\n" +
 	"\x06values\x18\x01 \x03(\tR\x06values\"\x0f\n" +
-	"\rHealthRequest\"*\n" +
+	"\rHealthRequest\"\xb9\x01\n" +
 	"\x0eHealthResponse\x12\x18\n" +
-	"\ahealthy\x18\x01 \x01(\bR\ahealthy2\x80\x01\n" +
+	"\ahealthy\x18\x01 \x01(\bR\ahealthy\x12\x12\n" +
+	"\x04cell\x18\x02 \x01(\tR\x04cell\x12\x10\n" +
+	"\x03uid\x18\x03 \x01(\rR\x03uid\x12\x1a\n" +
+	"\bkeyspace\x18\x04 \x01(\tR\bkeyspace\x12\x14\n" +
+	"\x05shard\x18\x05 \x01(\tR\x05shard\x12\x1f\n" +
+	"\vtablet_type\x18\x06 \x01(\tR\n" +
+	"tabletType\x12\x14\n" +
+	"\x05alias\x18\a \x01(\tR\x05alias2\x80\x01\n" +
 	"\rTabletService\x126\n" +
 	"\aExecute\x12\x14.tablet.QueryRequest\x1a\x15.tablet.QueryResponse\x127\n" +
 	"\x06Health\x12\x15.tablet.HealthRequest\x1a\x16.tablet.HealthResponseB.Z,github.com/Anmol20102005/VScale/proto/tabletb\x06proto3"

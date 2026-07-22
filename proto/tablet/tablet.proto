@@ -27,6 +27,12 @@ message HealthRequest {}
 
 message HealthResponse {
     bool healthy = 1;
+    string cell = 2;
+    uint32 uid = 3;
+    string keyspace = 4;
+    string shard = 5;
+    string tablet_type = 6;
+    string alias = 7;
 }
 
 service TabletService {

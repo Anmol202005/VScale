@@ -6,16 +6,21 @@ import (
 
 	pb "github.com/Anmol202005/VScale/proto/tablet"
 	"github.com/Anmol202005/VScale/internal/tablet/executor"
+	"github.com/Anmol202005/VScale/internal/tablet/metadata"
 )
 
 type TabletHandler struct {
 	pb.UnimplementedTabletServiceServer
 
 	executor *executor.Executor
+	meta     *metadata.TabletMetadata
 }
 
-func NewTabletHandler() *TabletHandler {
-	return &TabletHandler{}
+func NewTabletHandler(exe *executor.Executor, meta *metadata.TabletMetadata) *TabletHandler {
+	return &TabletHandler{
+		executor: exe,
+		meta:     meta,
+	}
 }
 
 func (h *TabletHandler) Execute(
@@ -55,12 +60,14 @@ func (h *TabletHandler) Execute(
 	return response, nil
 }
 
-func (h *TabletHandler) Health(
-	ctx context.Context,
-	req *pb.HealthRequest,
-) (*pb.HealthResponse, error) {
-
+func (h *TabletHandler) Health(ctx context.Context, req *pb.HealthRequest) (*pb.HealthResponse, error) {
 	return &pb.HealthResponse{
-		Healthy: true,
+		Healthy:    true,
+		Cell:       h.meta.Cell,
+		Uid:        h.meta.UID,
+		Keyspace:   h.meta.Keyspace,
+		Shard:      h.meta.Shard,
+		TabletType: h.meta.Type.String(),
+		Alias:      h.meta.Alias(),
 	}, nil
 }

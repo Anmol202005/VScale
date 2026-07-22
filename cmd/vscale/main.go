@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"github.com/joho/godotenv"
 	"github.com/Anmol202005/VScale/internal/tablet/server"
+	"github.com/Anmol202005/VScale/internal/tablet/metadata"
 )
 
 func main() {
@@ -21,13 +22,21 @@ func main() {
 	if err != nil {
 		log.Fatal("GRPC_PORT environment variable is not set or invalid")
 	}
-	
+
 	connString := os.Getenv("DATABASE_URL")
 	if connString == "" {
 		log.Fatal("DATABASE_URL environment variable is not set")
 	}
 
-	srv, err := server.NewServer(port, connString)
+	meta, err := metadata.LoadFromFlags()
+	if err != nil {
+		log.Fatalf("invalid tablet metadata: %v", err)
+	}
+	log.Printf("starting tablet %s (keyspace=%s shard=%s type=%s)",
+		meta.Alias(), meta.Keyspace, meta.Shard, meta.Type)
+
+
+	srv, err := server.NewServer(port, connString, meta)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}

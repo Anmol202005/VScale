@@ -1,14 +1,20 @@
 package executor
 
 import (
+	"errors"
 	"context"
 	"github.com/Anmol202005/VScale/internal/tablet/pool"
 	"github.com/Anmol202005/VScale/internal/parser"
+	"github.com/Anmol202005/VScale/internal/tablet/metadata"
 )
+
+var ErrReadOnly = errors.New("executor: this tablet is read-only (type=" +
+	" REPLICA/RDONLY), writes are not permitted")
 
 type Executor struct {
 	pool *pool.Pool
 	tx *TxManager
+	tabletType metadata.TabletType
 }
 
 type Result struct {
@@ -18,10 +24,11 @@ type Result struct {
 	RowsAffected int64
 }
 
-func NewExecutor(pool *pool.Pool, tx *TxManager) *Executor {
+func NewExecutor(pool *pool.Pool, tx *TxManager, tabletType metadata.TabletType) *Executor {
 	return &Executor{
 		pool: pool,
 		tx: tx,
+		tabletType: tabletType,
 	}
 }
 
@@ -30,6 +37,9 @@ func (e *Executor) ExecuteSQL(ctx context.Context, query string, txID int64) ([]
 	if err != nil {
 		return nil, txID, err
 	}
+
+	isReadOnlyTablet := e.tabletType == metadata.TabletTypeReplica ||
+		e.tabletType == metadata.TabletTypeRdonly
 
 	results := make([]Result, 0)
 
@@ -61,16 +71,18 @@ func (e *Executor) ExecuteSQL(ctx context.Context, query string, txID int64) ([]
 			continue
 		}
 
+		if isReadOnlyTablet && parser.IsWrite(stmt) {
+			return nil, txID, ErrReadOnly
+		}
+
 		var result *Result
 		if txID != 0 {
-			// inside an explicit transaction: route through TxManager
 			if parser.IsReturning(stmt) {
 				result, err = e.tx.Query(ctx, txID, stmt.SQL)
 			} else {
 				result, err = e.tx.Execute(ctx, txID, stmt.SQL)
 			}
 		} else {
-			// autocommit: use the plain pool path as before
 			if parser.IsReturning(stmt) {
 				result, err = e.Query(ctx, stmt.SQL)
 			} else {

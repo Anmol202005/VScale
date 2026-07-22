@@ -41,3 +41,7 @@ func IsRollback(stmt parser.Statement) bool {
 	}
 	return false
 }
+
+func IsWrite(stmt parser.Statement) bool {
+	return tree.CanWriteData(stmt.AST) || tree.CanModifySchema(stmt.AST)
+}
