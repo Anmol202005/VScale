@@ -33,6 +33,7 @@ message HealthResponse {
     string shard = 5;
     string tablet_type = 6;
     string alias = 7;
+    int32 max_conns = 8;
 }
 
 service TabletService {

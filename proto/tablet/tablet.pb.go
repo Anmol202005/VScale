@@ -282,6 +282,7 @@ type HealthResponse struct {
 	Shard         string                 `protobuf:"bytes,5,opt,name=shard,proto3" json:"shard,omitempty"`
 	TabletType    string                 `protobuf:"bytes,6,opt,name=tablet_type,json=tabletType,proto3" json:"tablet_type,omitempty"`
 	Alias         string                 `protobuf:"bytes,7,opt,name=alias,proto3" json:"alias,omitempty"`
+	MaxConns      int32                  `protobuf:"varint,8,opt,name=max_conns,json=maxConns,proto3" json:"max_conns,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -365,6 +366,13 @@ func (x *HealthResponse) GetAlias() string {
 	return ""
 }
 
+func (x *HealthResponse) GetMaxConns() int32 {
+	if x != nil {
+		return x.MaxConns
+	}
+	return 0
+}
+
 var File_proto_tablet_tablet_proto protoreflect.FileDescriptor
 
 const file_proto_tablet_tablet_proto_rawDesc = "" +
@@ -383,7 +391,7 @@ const file_proto_tablet_tablet_proto_rawDesc = "" +
 	"\rrows_affected\x18\x04 \x01(\x03R\frowsAffected\"\x1d\n" +
 	"\x03Row\x12\x16\n" +
 	"\x06values\x18\x01 \x03(\tR\x06values\"\x0f\n" +
-	"\rHealthRequest\"\xb9\x01\n" +
+	"\rHealthRequest\"\xd6\x01\n" +
 	"\x0eHealthResponse\x12\x18\n" +
 	"\ahealthy\x18\x01 \x01(\bR\ahealthy\x12\x12\n" +
 	"\x04cell\x18\x02 \x01(\tR\x04cell\x12\x10\n" +
@@ -392,7 +400,8 @@ const file_proto_tablet_tablet_proto_rawDesc = "" +
 	"\x05shard\x18\x05 \x01(\tR\x05shard\x12\x1f\n" +
 	"\vtablet_type\x18\x06 \x01(\tR\n" +
 	"tabletType\x12\x14\n" +
-	"\x05alias\x18\a \x01(\tR\x05alias2\x80\x01\n" +
+	"\x05alias\x18\a \x01(\tR\x05alias\x12\x1b\n" +
+	"\tmax_conns\x18\b \x01(\x05R\bmaxConns2\x80\x01\n" +
 	"\rTabletService\x126\n" +
 	"\aExecute\x12\x14.tablet.QueryRequest\x1a\x15.tablet.QueryResponse\x127\n" +
 	"\x06Health\x12\x15.tablet.HealthRequest\x1a\x16.tablet.HealthResponseB.Z,github.com/Anmol20102005/VScale/proto/tabletb\x06proto3"

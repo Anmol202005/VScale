@@ -69,5 +69,6 @@ func (h *TabletHandler) Health(ctx context.Context, req *pb.HealthRequest) (*pb.
 		Shard:      h.meta.Shard,
 		TabletType: h.meta.Type.String(),
 		Alias:      h.meta.Alias(),
+		MaxConns:   h.meta.MaxConns,
 	}, nil
 }
