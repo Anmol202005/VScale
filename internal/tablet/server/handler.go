@@ -2,12 +2,16 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/Anmol202005/VScale/proto/tablet"
+	"github.com/Anmol202005/VScale/internal/tablet/executor"
 )
 
 type TabletHandler struct {
 	pb.UnimplementedTabletServiceServer
+
+	executor *executor.Executor
 }
 
 func NewTabletHandler() *TabletHandler {
@@ -19,8 +23,13 @@ func (h *TabletHandler) Execute(
 	req *pb.QueryRequest,
 ) (*pb.QueryResponse, error) {
 
+	result, err := h.executor.Execute(ctx, req.Sql)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.QueryResponse{
-		Message: "Query received: " + req.Sql,
+	Message: fmt.Sprintf("%d rows affected", result.RowsAffected),
 	}, nil
 }
 
