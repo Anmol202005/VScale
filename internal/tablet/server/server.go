@@ -1,6 +1,7 @@
 package server
 
 import (
+	"time"
 	"google.golang.org/grpc"
 	"context"
 	"fmt"
@@ -24,7 +25,7 @@ func NewServer(port int, connString string) (*Server, error) {
 	}
 
 	handler := NewTabletHandler()
-	handler.executor = executor.NewExecutor(p)
+	handler.executor = executor.NewExecutor(p, executor.NewTxManager(p, 30*time.Second))
 
 	pb.RegisterTabletServiceServer(grpcServer, handler)
 	return &Server{

@@ -24,6 +24,7 @@ const (
 type QueryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Sql           string                 `protobuf:"bytes,1,opt,name=sql,proto3" json:"sql,omitempty"`
+	TransactionId int64                  `protobuf:"varint,2,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -65,9 +66,17 @@ func (x *QueryRequest) GetSql() string {
 	return ""
 }
 
+func (x *QueryRequest) GetTransactionId() int64 {
+	if x != nil {
+		return x.TransactionId
+	}
+	return 0
+}
+
 type QueryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Results       []*QueryResult         `protobuf:"bytes,1,rep,name=results,proto3" json:"results,omitempty"`
+	TransactionId int64                  `protobuf:"varint,2,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -107,6 +116,13 @@ func (x *QueryResponse) GetResults() []*QueryResult {
 		return x.Results
 	}
 	return nil
+}
+
+func (x *QueryResponse) GetTransactionId() int64 {
+	if x != nil {
+		return x.TransactionId
+	}
+	return 0
 }
 
 type QueryResult struct {
@@ -305,11 +321,13 @@ var File_proto_tablet_tablet_proto protoreflect.FileDescriptor
 
 const file_proto_tablet_tablet_proto_rawDesc = "" +
 	"\n" +
-	"\x19proto/tablet/tablet.proto\x12\x06tablet\" \n" +
+	"\x19proto/tablet/tablet.proto\x12\x06tablet\"G\n" +
 	"\fQueryRequest\x12\x10\n" +
-	"\x03sql\x18\x01 \x01(\tR\x03sql\">\n" +
+	"\x03sql\x18\x01 \x01(\tR\x03sql\x12%\n" +
+	"\x0etransaction_id\x18\x02 \x01(\x03R\rtransactionId\"e\n" +
 	"\rQueryResponse\x12-\n" +
-	"\aresults\x18\x01 \x03(\v2\x13.tablet.QueryResultR\aresults\"\x7f\n" +
+	"\aresults\x18\x01 \x03(\v2\x13.tablet.QueryResultR\aresults\x12%\n" +
+	"\x0etransaction_id\x18\x02 \x01(\x03R\rtransactionId\"\x7f\n" +
 	"\vQueryResult\x12\x10\n" +
 	"\x03sql\x18\x01 \x01(\tR\x03sql\x12\x18\n" +
 	"\acolumns\x18\x02 \x03(\tR\acolumns\x12\x1f\n" +

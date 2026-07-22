@@ -8,6 +8,7 @@ import (
 
 type Executor struct {
 	pool *pool.Pool
+	tx *TxManager
 }
 
 type Result struct {
@@ -17,35 +18,72 @@ type Result struct {
 	RowsAffected int64
 }
 
-func NewExecutor(pool *pool.Pool) *Executor {
+func NewExecutor(pool *pool.Pool, tx *TxManager) *Executor {
 	return &Executor{
 		pool: pool,
+		tx: tx,
 	}
 }
 
-func (e *Executor) ExecuteSQL(ctx context.Context, query string) ([]Result, error) {
+func (e *Executor) ExecuteSQL(ctx context.Context, query string, txID int64) ([]Result, int64, error) {
 	stmts, err := parser.Parse(query)
 	if err != nil {
-		return nil, err
+		return nil, txID, err
 	}
 
 	results := make([]Result, 0)
+
 	for _, stmt := range stmts {
-		if parser.IsReturning(stmt) {
-			result, err := e.Query(ctx, stmt.SQL)
+		switch {
+		case parser.IsBegin(stmt):
+			id, err := e.tx.Begin(ctx)
 			if err != nil {
-				return nil, err
+				return nil, txID, err
 			}
-			results = append(results, *result)
+			txID = id
+			results = append(results, Result{SQL: stmt.SQL})
+			continue
+
+		case parser.IsCommit(stmt):
+			if err := e.tx.Commit(ctx, txID); err != nil {
+				return nil, txID, err
+			}
+			txID = 0
+			results = append(results, Result{SQL: stmt.SQL})
+			continue
+
+		case parser.IsRollback(stmt):
+			if err := e.tx.Rollback(ctx, txID); err != nil {
+				return nil, txID, err
+			}
+			txID = 0
+			results = append(results, Result{SQL: stmt.SQL})
 			continue
 		}
-		result, err := e.Execute(ctx, stmt.SQL)
+
+		var result *Result
+		if txID != 0 {
+			// inside an explicit transaction: route through TxManager
+			if parser.IsReturning(stmt) {
+				result, err = e.tx.Query(ctx, txID, stmt.SQL)
+			} else {
+				result, err = e.tx.Execute(ctx, txID, stmt.SQL)
+			}
+		} else {
+			// autocommit: use the plain pool path as before
+			if parser.IsReturning(stmt) {
+				result, err = e.Query(ctx, stmt.SQL)
+			} else {
+				result, err = e.Execute(ctx, stmt.SQL)
+			}
+		}
 		if err != nil {
-			return nil, err
+			return nil, txID, err
 		}
 		results = append(results, *result)
 	}
-	return results, nil
+
+	return results, txID, nil
 }
 	
 func (e *Executor) Execute(ctx context.Context, query string) (*Result, error) {

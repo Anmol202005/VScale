@@ -20,3 +20,24 @@ func IsReturning(stmt parser.Statement) bool {
 	}
 	return false
 }
+
+func IsBegin(stmt parser.Statement) bool {
+	if(stmt.AST.StatementTag() == "BEGIN"){
+		return true
+	}
+	return false
+}
+
+func IsCommit(stmt parser.Statement) bool {
+	if(stmt.AST.StatementTag() == "COMMIT"){
+		return true
+	}
+	return false
+}
+
+func IsRollback(stmt parser.Statement) bool {
+	if(stmt.AST.StatementTag() == "ROLLBACK"){
+		return true
+	}
+	return false
+}

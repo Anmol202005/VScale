@@ -23,12 +23,14 @@ func (h *TabletHandler) Execute(
 	req *pb.QueryRequest,
 ) (*pb.QueryResponse, error) {
 
-	results, err := h.executor.ExecuteSQL(ctx, req.Sql)
+	results, txID, err := h.executor.ExecuteSQL(ctx, req.Sql, req.TransactionId)
 	if err != nil {
 		return nil, err
 	}
 
-	response := &pb.QueryResponse{}
+	response := &pb.QueryResponse{
+		TransactionId: txID,
+	}
 
 	for _, result := range results {
 		queryResult := &pb.QueryResult{
