@@ -28,7 +28,7 @@ func NewServer(port int, connString string) (*Server, error) {
 
 	pb.RegisterTabletServiceServer(grpcServer, handler)
 	return &Server{
-		grpcServer: grpc.NewServer(),
+		grpcServer: grpcServer,
 		port: port,
 		pool: p,
 	}, nil
