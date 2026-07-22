@@ -4,13 +4,29 @@ package tablet;
 
 option go_package = "github.com/Anmol20102005/VScale/proto/tablet";
 
+
 message QueryRequest {
     string sql = 1;
 }
 
+
 message QueryResponse {
-    string message = 1;
+    repeated QueryResult results = 1;
 }
+
+
+message QueryResult {
+    string sql = 1;
+    repeated string columns = 2;
+    repeated Row rows = 3;
+    int64 rows_affected = 4;
+}
+
+
+message Row {
+    repeated string values = 1;
+}
+
 
 message HealthRequest {}
 
@@ -18,10 +34,11 @@ message HealthResponse {
     bool healthy = 1;
 }
 
+
 service TabletService {
     rpc Execute(QueryRequest)
         returns (QueryResponse);
-    
+
     rpc Health(HealthRequest)
         returns (HealthResponse);
 }

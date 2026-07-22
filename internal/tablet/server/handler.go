@@ -23,14 +23,34 @@ func (h *TabletHandler) Execute(
 	req *pb.QueryRequest,
 ) (*pb.QueryResponse, error) {
 
-	result, err := h.executor.Execute(ctx, req.Sql)
+	results, err := h.executor.ExecuteSQL(ctx, req.Sql)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.QueryResponse{
-	Message: fmt.Sprintf("%d rows affected", result.RowsAffected),
-	}, nil
+	response := &pb.QueryResponse{}
+
+	for _, result := range results {
+		queryResult := &pb.QueryResult{
+			Sql:          result.SQL,
+			Columns:      result.Columns,
+			RowsAffected: result.RowsAffected,
+		}
+
+		for _, row := range result.Rows {
+			pbRow := &pb.Row{}
+
+			for _, value := range row {
+				pbRow.Values = append(pbRow.Values, fmt.Sprintf("%v", value))
+			}
+
+			queryResult.Rows = append(queryResult.Rows, pbRow)
+		}
+
+		response.Results = append(response.Results, queryResult)
+	}
+
+	return response, nil
 }
 
 func (h *TabletHandler) Health(

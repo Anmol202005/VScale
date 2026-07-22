@@ -67,7 +67,7 @@ func (x *QueryRequest) GetSql() string {
 
 type QueryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	Results       []*QueryResult         `protobuf:"bytes,1,rep,name=results,proto3" json:"results,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -102,11 +102,123 @@ func (*QueryResponse) Descriptor() ([]byte, []int) {
 	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *QueryResponse) GetMessage() string {
+func (x *QueryResponse) GetResults() []*QueryResult {
 	if x != nil {
-		return x.Message
+		return x.Results
+	}
+	return nil
+}
+
+type QueryResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sql           string                 `protobuf:"bytes,1,opt,name=sql,proto3" json:"sql,omitempty"`
+	Columns       []string               `protobuf:"bytes,2,rep,name=columns,proto3" json:"columns,omitempty"`
+	Rows          []*Row                 `protobuf:"bytes,3,rep,name=rows,proto3" json:"rows,omitempty"`
+	RowsAffected  int64                  `protobuf:"varint,4,opt,name=rows_affected,json=rowsAffected,proto3" json:"rows_affected,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QueryResult) Reset() {
+	*x = QueryResult{}
+	mi := &file_proto_tablet_tablet_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QueryResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryResult) ProtoMessage() {}
+
+func (x *QueryResult) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_tablet_tablet_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QueryResult.ProtoReflect.Descriptor instead.
+func (*QueryResult) Descriptor() ([]byte, []int) {
+	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *QueryResult) GetSql() string {
+	if x != nil {
+		return x.Sql
 	}
 	return ""
+}
+
+func (x *QueryResult) GetColumns() []string {
+	if x != nil {
+		return x.Columns
+	}
+	return nil
+}
+
+func (x *QueryResult) GetRows() []*Row {
+	if x != nil {
+		return x.Rows
+	}
+	return nil
+}
+
+func (x *QueryResult) GetRowsAffected() int64 {
+	if x != nil {
+		return x.RowsAffected
+	}
+	return 0
+}
+
+type Row struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Values        []string               `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Row) Reset() {
+	*x = Row{}
+	mi := &file_proto_tablet_tablet_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Row) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Row) ProtoMessage() {}
+
+func (x *Row) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_tablet_tablet_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Row.ProtoReflect.Descriptor instead.
+func (*Row) Descriptor() ([]byte, []int) {
+	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Row) GetValues() []string {
+	if x != nil {
+		return x.Values
+	}
+	return nil
 }
 
 type HealthRequest struct {
@@ -117,7 +229,7 @@ type HealthRequest struct {
 
 func (x *HealthRequest) Reset() {
 	*x = HealthRequest{}
-	mi := &file_proto_tablet_tablet_proto_msgTypes[2]
+	mi := &file_proto_tablet_tablet_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -129,7 +241,7 @@ func (x *HealthRequest) String() string {
 func (*HealthRequest) ProtoMessage() {}
 
 func (x *HealthRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_tablet_tablet_proto_msgTypes[2]
+	mi := &file_proto_tablet_tablet_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -142,7 +254,7 @@ func (x *HealthRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthRequest.ProtoReflect.Descriptor instead.
 func (*HealthRequest) Descriptor() ([]byte, []int) {
-	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{2}
+	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{4}
 }
 
 type HealthResponse struct {
@@ -154,7 +266,7 @@ type HealthResponse struct {
 
 func (x *HealthResponse) Reset() {
 	*x = HealthResponse{}
-	mi := &file_proto_tablet_tablet_proto_msgTypes[3]
+	mi := &file_proto_tablet_tablet_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -166,7 +278,7 @@ func (x *HealthResponse) String() string {
 func (*HealthResponse) ProtoMessage() {}
 
 func (x *HealthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_tablet_tablet_proto_msgTypes[3]
+	mi := &file_proto_tablet_tablet_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -179,7 +291,7 @@ func (x *HealthResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthResponse.ProtoReflect.Descriptor instead.
 func (*HealthResponse) Descriptor() ([]byte, []int) {
-	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{3}
+	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *HealthResponse) GetHealthy() bool {
@@ -195,9 +307,16 @@ const file_proto_tablet_tablet_proto_rawDesc = "" +
 	"\n" +
 	"\x19proto/tablet/tablet.proto\x12\x06tablet\" \n" +
 	"\fQueryRequest\x12\x10\n" +
-	"\x03sql\x18\x01 \x01(\tR\x03sql\")\n" +
-	"\rQueryResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"\x0f\n" +
+	"\x03sql\x18\x01 \x01(\tR\x03sql\">\n" +
+	"\rQueryResponse\x12-\n" +
+	"\aresults\x18\x01 \x03(\v2\x13.tablet.QueryResultR\aresults\"\x7f\n" +
+	"\vQueryResult\x12\x10\n" +
+	"\x03sql\x18\x01 \x01(\tR\x03sql\x12\x18\n" +
+	"\acolumns\x18\x02 \x03(\tR\acolumns\x12\x1f\n" +
+	"\x04rows\x18\x03 \x03(\v2\v.tablet.RowR\x04rows\x12#\n" +
+	"\rrows_affected\x18\x04 \x01(\x03R\frowsAffected\"\x1d\n" +
+	"\x03Row\x12\x16\n" +
+	"\x06values\x18\x01 \x03(\tR\x06values\"\x0f\n" +
 	"\rHealthRequest\"*\n" +
 	"\x0eHealthResponse\x12\x18\n" +
 	"\ahealthy\x18\x01 \x01(\bR\ahealthy2\x80\x01\n" +
@@ -217,23 +336,27 @@ func file_proto_tablet_tablet_proto_rawDescGZIP() []byte {
 	return file_proto_tablet_tablet_proto_rawDescData
 }
 
-var file_proto_tablet_tablet_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_proto_tablet_tablet_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_proto_tablet_tablet_proto_goTypes = []any{
 	(*QueryRequest)(nil),   // 0: tablet.QueryRequest
 	(*QueryResponse)(nil),  // 1: tablet.QueryResponse
-	(*HealthRequest)(nil),  // 2: tablet.HealthRequest
-	(*HealthResponse)(nil), // 3: tablet.HealthResponse
+	(*QueryResult)(nil),    // 2: tablet.QueryResult
+	(*Row)(nil),            // 3: tablet.Row
+	(*HealthRequest)(nil),  // 4: tablet.HealthRequest
+	(*HealthResponse)(nil), // 5: tablet.HealthResponse
 }
 var file_proto_tablet_tablet_proto_depIdxs = []int32{
-	0, // 0: tablet.TabletService.Execute:input_type -> tablet.QueryRequest
-	2, // 1: tablet.TabletService.Health:input_type -> tablet.HealthRequest
-	1, // 2: tablet.TabletService.Execute:output_type -> tablet.QueryResponse
-	3, // 3: tablet.TabletService.Health:output_type -> tablet.HealthResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	2, // 0: tablet.QueryResponse.results:type_name -> tablet.QueryResult
+	3, // 1: tablet.QueryResult.rows:type_name -> tablet.Row
+	0, // 2: tablet.TabletService.Execute:input_type -> tablet.QueryRequest
+	4, // 3: tablet.TabletService.Health:input_type -> tablet.HealthRequest
+	1, // 4: tablet.TabletService.Execute:output_type -> tablet.QueryResponse
+	5, // 5: tablet.TabletService.Health:output_type -> tablet.HealthResponse
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_proto_tablet_tablet_proto_init() }
@@ -247,7 +370,7 @@ func file_proto_tablet_tablet_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_tablet_tablet_proto_rawDesc), len(file_proto_tablet_tablet_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
