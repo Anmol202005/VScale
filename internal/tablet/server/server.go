@@ -16,11 +16,11 @@ type Server struct {
 	pool *pool.Pool
 }
 
-func NewServer(port int, connString string) *Server {
+func NewServer(port int, connString string) (*Server, error) {
 	grpcServer := grpc.NewServer()
 	p, err := pool.NewPool(context.Background(), connString)
 	if err != nil {
-		panic(fmt.Sprintf("failed to create pool: %v", err))
+		return nil, fmt.Errorf("failed to create pool: %w", err)
 	}
 
 	handler := NewTabletHandler()
@@ -31,7 +31,7 @@ func NewServer(port int, connString string) *Server {
 		grpcServer: grpc.NewServer(),
 		port: port,
 		pool: p,
-	}
+	}, nil
 }
 
 func (s *Server) Start() error {
