@@ -6,6 +6,8 @@ import (
 
 	pb "github.com/Anmol202005/VScale/proto/tablet"
 	"github.com/Anmol202005/VScale/internal/gate/client"
+	"github.com/Anmol202005/VScale/internal/gate/gateway"
+	"github.com/Anmol202005/VScale/internal/gate/router"
 	"google.golang.org/grpc"
 )
 
@@ -21,7 +23,9 @@ func New(listenAddr, tabletAddr string) (*Server, error) {
 		return nil, fmt.Errorf("server: %w", err)
 	}
 
-	handler := NewVTGateHandler(tc)
+	r := router.NewRouter(tc)
+	gw := gateway.New(r)
+	handler := NewVTGateHandler(gw)
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterTabletServiceServer(grpcServer, handler)
