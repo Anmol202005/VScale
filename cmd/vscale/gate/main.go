@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 
@@ -24,20 +25,24 @@ func main() {
 		log.Fatal("VTGATE_PORT environment variable is not set or invalid")
 	}
 
-	tabletAddr := os.Getenv("TABLET_ADDR")
-	if tabletAddr == "" {
-		log.Fatal("TABLET_ADDR environment variable is not set")
+	tabletAddrsStr := os.Getenv("TABLET_ADDRS")
+	if tabletAddrsStr == "" {
+		log.Fatal("TABLET_ADDRS environment variable is not set")
+	}
+	tabletAddrs := strings.Split(tabletAddrsStr, ",")
+	for i := range tabletAddrs {
+		tabletAddrs[i] = strings.TrimSpace(tabletAddrs[i])
 	}
 
 	listenAddr := ":" + strconv.Itoa(port)
 
-	srv, err := server.New(listenAddr, tabletAddr)
+	srv, err := server.New(listenAddr, tabletAddrs)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}
 	defer srv.Close()
 
-	log.Printf("starting vtgate on port %d, forwarding to tablet at %s", port, tabletAddr)
+	log.Printf("starting vtgate on port %d, connected to tablets: %v", port, tabletAddrs)
 	if err := srv.Serve(); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}

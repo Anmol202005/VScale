@@ -14,16 +14,23 @@ import (
 type Server struct {
 	grpcServer *grpc.Server
 	listenAddr string
-	tablet     *client.TabletClient
+	tablets    []*client.TabletClient
 }
 
-func New(listenAddr, tabletAddr string) (*Server, error) {
-	tc, err := client.NewTabletClient(tabletAddr)
-	if err != nil {
-		return nil, fmt.Errorf("server: %w", err)
+func New(listenAddr string, tabletAddrs []string) (*Server, error) {
+	tablets := make([]*client.TabletClient, 0, len(tabletAddrs))
+	for _, addr := range tabletAddrs {
+		tc, err := client.NewTabletClient(addr)
+		if err != nil {
+			for _, t := range tablets {
+				t.Close()
+			}
+			return nil, fmt.Errorf("server: failed to connect to tablet at %s: %w", addr, err)
+		}
+		tablets = append(tablets, tc)
 	}
 
-	r := router.NewRouter(tc)
+	r := router.NewRouter(tablets)
 	gw := gateway.New(r)
 	handler := NewVTGateHandler(gw)
 
@@ -33,7 +40,7 @@ func New(listenAddr, tabletAddr string) (*Server, error) {
 	return &Server{
 		grpcServer: grpcServer,
 		listenAddr: listenAddr,
-		tablet:     tc,
+		tablets:    tablets,
 	}, nil
 }
 
@@ -46,5 +53,11 @@ func (s *Server) Serve() error {
 }
 
 func (s *Server) Close() error {
-	return s.tablet.Close()
+	var firstErr error
+	for _, t := range s.tablets {
+		if err := t.Close(); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
 }

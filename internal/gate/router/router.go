@@ -5,13 +5,13 @@ import (
 )
 
 type Router struct {
-	defaultTablet *client.TabletClient
+	tablets []*client.TabletClient
 }
 
-func NewRouter(defaultTablet *client.TabletClient) *Router {
-	return &Router{defaultTablet: defaultTablet}
+func NewRouter(tablets []*client.TabletClient) *Router {
+	return &Router{tablets: tablets}
 }
 
 func (r *Router) Route(query string) *client.TabletClient {
-	return r.defaultTablet
+	return r.tablets[0]
 }
