@@ -404,7 +404,7 @@ const file_proto_tablet_tablet_proto_rawDesc = "" +
 	"\tmax_conns\x18\b \x01(\x05R\bmaxConns2\x80\x01\n" +
 	"\rTabletService\x126\n" +
 	"\aExecute\x12\x14.tablet.QueryRequest\x1a\x15.tablet.QueryResponse\x127\n" +
-	"\x06Health\x12\x15.tablet.HealthRequest\x1a\x16.tablet.HealthResponseB.Z,github.com/Anmol20102005/VScale/proto/tabletb\x06proto3"
+	"\x06Health\x12\x15.tablet.HealthRequest\x1a\x16.tablet.HealthResponseB,Z*github.com/Anmol202005/VScale/proto/tabletb\x06proto3"
 
 var (
 	file_proto_tablet_tablet_proto_rawDescOnce sync.Once
