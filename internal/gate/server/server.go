@@ -8,6 +8,7 @@ import (
 	"github.com/Anmol202005/VScale/internal/gate/client"
 	"github.com/Anmol202005/VScale/internal/gate/gateway"
 	"github.com/Anmol202005/VScale/internal/gate/router"
+	"github.com/Anmol202005/VScale/internal/topology"
 	"google.golang.org/grpc"
 )
 
@@ -17,15 +18,17 @@ type Server struct {
 	tablets    []*client.TabletClient
 }
 
-func New(listenAddr string, tabletAddrs []string) (*Server, error) {
-	tablets := make([]*client.TabletClient, 0, len(tabletAddrs))
-	for _, addr := range tabletAddrs {
-		tc, err := client.NewTabletClient(addr)
+func New(listenAddr string, topo *topology.Topology) (*Server, error) {
+	tabletDescs := topo.GetTablets()
+
+	tablets := make([]*client.TabletClient, 0, len(tabletDescs))
+	for _, td := range tabletDescs {
+		tc, err := client.NewTabletClient(td.Addr)
 		if err != nil {
 			for _, t := range tablets {
 				t.Close()
 			}
-			return nil, fmt.Errorf("server: failed to connect to tablet at %s: %w", addr, err)
+			return nil, fmt.Errorf("server: failed to connect to tablet at %s: %w", td.Addr, err)
 		}
 		tablets = append(tablets, tc)
 	}
