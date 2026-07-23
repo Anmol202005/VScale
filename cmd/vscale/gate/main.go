@@ -4,11 +4,11 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 
 	"github.com/Anmol202005/VScale/internal/gate/server"
-	"github.com/Anmol202005/VScale/internal/topology"
 )
 
 func main() {
@@ -25,25 +25,29 @@ func main() {
 		log.Fatal("VTGATE_PORT environment variable is not set or invalid")
 	}
 
-	tabletAddrsCSV := os.Getenv("TABLET_ADDRS")
-	if tabletAddrsCSV == "" {
-		log.Fatal("TABLET_ADDRS environment variable is not set")
+	etcdEndpointsStr := os.Getenv("ETCD_ENDPOINTS")
+	if etcdEndpointsStr == "" {
+		log.Fatal("ETCD_ENDPOINTS environment variable is not set")
+	}
+	etcdEndpoints := strings.Split(etcdEndpointsStr, ",")
+	for i := range etcdEndpoints {
+		etcdEndpoints[i] = strings.TrimSpace(etcdEndpoints[i])
 	}
 
-	topo, err := topology.LoadFromEnv(tabletAddrsCSV)
-	if err != nil {
-		log.Fatalf("failed to load topology: %v", err)
+	etcdPrefix := os.Getenv("ETCD_PREFIX")
+	if etcdPrefix == "" {
+		etcdPrefix = "/vscale/tablets/"
 	}
 
 	listenAddr := ":" + strconv.Itoa(port)
 
-	srv, err := server.New(listenAddr, topo)
+	srv, err := server.New(listenAddr, etcdEndpoints, etcdPrefix)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}
 	defer srv.Close()
 
-	log.Printf("starting vtgate on port %d, topology tablets: %v", port, topo.GetTablets())
+	log.Printf("starting vtgate on port %d, watching etcd prefix %s", port, etcdPrefix)
 	if err := srv.Serve(); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
