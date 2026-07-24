@@ -32,6 +32,10 @@ func NewExecutor(pool *pool.Pool, tx *TxManager, tabletType metadata.TabletType)
 	}
 }
 
+func (e *Executor) Tx() *TxManager {
+	return e.tx
+}
+
 func (e *Executor) ExecuteSQL(ctx context.Context, query string, txID int64) ([]Result, int64, error) {
 	stmts, err := parser.Parse(query)
 	if err != nil {

@@ -36,9 +36,44 @@ message HealthResponse {
     int32 max_conns = 8;
 }
 
+message PrepareRequest {
+    string sql = 1;
+    int64 transaction_id = 2;
+}
+
+message PrepareResponse {
+    bool prepared = 1;
+    string error = 2;
+    QueryResult result = 3;
+}
+
+message CommitRequest {
+    int64 transaction_id = 1;
+}
+
+message CommitResponse {
+    bool committed = 1;
+    string error = 2;
+}
+
+message RollbackRequest {
+    int64 transaction_id = 1;
+}
+
+message RollbackResponse {
+    bool rolled_back = 1;
+    string error = 2;
+}
+
 service TabletService {
     rpc Execute(QueryRequest)
         returns (QueryResponse);
+    rpc Prepare(PrepareRequest)
+        returns (PrepareResponse);
+    rpc Commit(CommitRequest)
+        returns (CommitResponse);
+    rpc Rollback(RollbackRequest)
+        returns (RollbackResponse);
     rpc Health(HealthRequest)
         returns (HealthResponse);
 }

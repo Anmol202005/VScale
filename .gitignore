@@ -8,3 +8,4 @@ coverage.out
 .vscode/
 .DS_Store
 default.etcd/
+test_logs/

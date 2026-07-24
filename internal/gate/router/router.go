@@ -130,6 +130,12 @@ func (r *Router) scatterResult() RouteResult {
 	return RouteResult{Tablets: all, Scatter: true}
 }
 
+func (r *Router) GetClient(addr string) *client.TabletClient {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.clients[addr]
+}
+
 func (r *Router) Close() {
 	r.mu.Lock()
 	defer r.mu.Unlock()

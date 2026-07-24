@@ -373,6 +373,310 @@ func (x *HealthResponse) GetMaxConns() int32 {
 	return 0
 }
 
+type PrepareRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sql           string                 `protobuf:"bytes,1,opt,name=sql,proto3" json:"sql,omitempty"`
+	TransactionId int64                  `protobuf:"varint,2,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PrepareRequest) Reset() {
+	*x = PrepareRequest{}
+	mi := &file_proto_tablet_tablet_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PrepareRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PrepareRequest) ProtoMessage() {}
+
+func (x *PrepareRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_tablet_tablet_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PrepareRequest.ProtoReflect.Descriptor instead.
+func (*PrepareRequest) Descriptor() ([]byte, []int) {
+	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *PrepareRequest) GetSql() string {
+	if x != nil {
+		return x.Sql
+	}
+	return ""
+}
+
+func (x *PrepareRequest) GetTransactionId() int64 {
+	if x != nil {
+		return x.TransactionId
+	}
+	return 0
+}
+
+type PrepareResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Prepared      bool                   `protobuf:"varint,1,opt,name=prepared,proto3" json:"prepared,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	Result        *QueryResult           `protobuf:"bytes,3,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PrepareResponse) Reset() {
+	*x = PrepareResponse{}
+	mi := &file_proto_tablet_tablet_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PrepareResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PrepareResponse) ProtoMessage() {}
+
+func (x *PrepareResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_tablet_tablet_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PrepareResponse.ProtoReflect.Descriptor instead.
+func (*PrepareResponse) Descriptor() ([]byte, []int) {
+	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *PrepareResponse) GetPrepared() bool {
+	if x != nil {
+		return x.Prepared
+	}
+	return false
+}
+
+func (x *PrepareResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *PrepareResponse) GetResult() *QueryResult {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+type CommitRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TransactionId int64                  `protobuf:"varint,1,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommitRequest) Reset() {
+	*x = CommitRequest{}
+	mi := &file_proto_tablet_tablet_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommitRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommitRequest) ProtoMessage() {}
+
+func (x *CommitRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_tablet_tablet_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommitRequest.ProtoReflect.Descriptor instead.
+func (*CommitRequest) Descriptor() ([]byte, []int) {
+	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CommitRequest) GetTransactionId() int64 {
+	if x != nil {
+		return x.TransactionId
+	}
+	return 0
+}
+
+type CommitResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Committed     bool                   `protobuf:"varint,1,opt,name=committed,proto3" json:"committed,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommitResponse) Reset() {
+	*x = CommitResponse{}
+	mi := &file_proto_tablet_tablet_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommitResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommitResponse) ProtoMessage() {}
+
+func (x *CommitResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_tablet_tablet_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommitResponse.ProtoReflect.Descriptor instead.
+func (*CommitResponse) Descriptor() ([]byte, []int) {
+	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *CommitResponse) GetCommitted() bool {
+	if x != nil {
+		return x.Committed
+	}
+	return false
+}
+
+func (x *CommitResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+type RollbackRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TransactionId int64                  `protobuf:"varint,1,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RollbackRequest) Reset() {
+	*x = RollbackRequest{}
+	mi := &file_proto_tablet_tablet_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RollbackRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RollbackRequest) ProtoMessage() {}
+
+func (x *RollbackRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_tablet_tablet_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RollbackRequest.ProtoReflect.Descriptor instead.
+func (*RollbackRequest) Descriptor() ([]byte, []int) {
+	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *RollbackRequest) GetTransactionId() int64 {
+	if x != nil {
+		return x.TransactionId
+	}
+	return 0
+}
+
+type RollbackResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RolledBack    bool                   `protobuf:"varint,1,opt,name=rolled_back,json=rolledBack,proto3" json:"rolled_back,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RollbackResponse) Reset() {
+	*x = RollbackResponse{}
+	mi := &file_proto_tablet_tablet_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RollbackResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RollbackResponse) ProtoMessage() {}
+
+func (x *RollbackResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_tablet_tablet_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RollbackResponse.ProtoReflect.Descriptor instead.
+func (*RollbackResponse) Descriptor() ([]byte, []int) {
+	return file_proto_tablet_tablet_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *RollbackResponse) GetRolledBack() bool {
+	if x != nil {
+		return x.RolledBack
+	}
+	return false
+}
+
+func (x *RollbackResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
 var File_proto_tablet_tablet_proto protoreflect.FileDescriptor
 
 const file_proto_tablet_tablet_proto_rawDesc = "" +
@@ -401,9 +705,30 @@ const file_proto_tablet_tablet_proto_rawDesc = "" +
 	"\vtablet_type\x18\x06 \x01(\tR\n" +
 	"tabletType\x12\x14\n" +
 	"\x05alias\x18\a \x01(\tR\x05alias\x12\x1b\n" +
-	"\tmax_conns\x18\b \x01(\x05R\bmaxConns2\x80\x01\n" +
+	"\tmax_conns\x18\b \x01(\x05R\bmaxConns\"I\n" +
+	"\x0ePrepareRequest\x12\x10\n" +
+	"\x03sql\x18\x01 \x01(\tR\x03sql\x12%\n" +
+	"\x0etransaction_id\x18\x02 \x01(\x03R\rtransactionId\"p\n" +
+	"\x0fPrepareResponse\x12\x1a\n" +
+	"\bprepared\x18\x01 \x01(\bR\bprepared\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\x12+\n" +
+	"\x06result\x18\x03 \x01(\v2\x13.tablet.QueryResultR\x06result\"6\n" +
+	"\rCommitRequest\x12%\n" +
+	"\x0etransaction_id\x18\x01 \x01(\x03R\rtransactionId\"D\n" +
+	"\x0eCommitResponse\x12\x1c\n" +
+	"\tcommitted\x18\x01 \x01(\bR\tcommitted\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"8\n" +
+	"\x0fRollbackRequest\x12%\n" +
+	"\x0etransaction_id\x18\x01 \x01(\x03R\rtransactionId\"I\n" +
+	"\x10RollbackResponse\x12\x1f\n" +
+	"\vrolled_back\x18\x01 \x01(\bR\n" +
+	"rolledBack\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error2\xb4\x02\n" +
 	"\rTabletService\x126\n" +
-	"\aExecute\x12\x14.tablet.QueryRequest\x1a\x15.tablet.QueryResponse\x127\n" +
+	"\aExecute\x12\x14.tablet.QueryRequest\x1a\x15.tablet.QueryResponse\x12:\n" +
+	"\aPrepare\x12\x16.tablet.PrepareRequest\x1a\x17.tablet.PrepareResponse\x127\n" +
+	"\x06Commit\x12\x15.tablet.CommitRequest\x1a\x16.tablet.CommitResponse\x12=\n" +
+	"\bRollback\x12\x17.tablet.RollbackRequest\x1a\x18.tablet.RollbackResponse\x127\n" +
 	"\x06Health\x12\x15.tablet.HealthRequest\x1a\x16.tablet.HealthResponseB,Z*github.com/Anmol202005/VScale/proto/tabletb\x06proto3"
 
 var (
@@ -418,27 +743,40 @@ func file_proto_tablet_tablet_proto_rawDescGZIP() []byte {
 	return file_proto_tablet_tablet_proto_rawDescData
 }
 
-var file_proto_tablet_tablet_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_proto_tablet_tablet_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_proto_tablet_tablet_proto_goTypes = []any{
-	(*QueryRequest)(nil),   // 0: tablet.QueryRequest
-	(*QueryResponse)(nil),  // 1: tablet.QueryResponse
-	(*QueryResult)(nil),    // 2: tablet.QueryResult
-	(*Row)(nil),            // 3: tablet.Row
-	(*HealthRequest)(nil),  // 4: tablet.HealthRequest
-	(*HealthResponse)(nil), // 5: tablet.HealthResponse
+	(*QueryRequest)(nil),     // 0: tablet.QueryRequest
+	(*QueryResponse)(nil),    // 1: tablet.QueryResponse
+	(*QueryResult)(nil),      // 2: tablet.QueryResult
+	(*Row)(nil),              // 3: tablet.Row
+	(*HealthRequest)(nil),    // 4: tablet.HealthRequest
+	(*HealthResponse)(nil),   // 5: tablet.HealthResponse
+	(*PrepareRequest)(nil),   // 6: tablet.PrepareRequest
+	(*PrepareResponse)(nil),  // 7: tablet.PrepareResponse
+	(*CommitRequest)(nil),    // 8: tablet.CommitRequest
+	(*CommitResponse)(nil),   // 9: tablet.CommitResponse
+	(*RollbackRequest)(nil),  // 10: tablet.RollbackRequest
+	(*RollbackResponse)(nil), // 11: tablet.RollbackResponse
 }
 var file_proto_tablet_tablet_proto_depIdxs = []int32{
-	2, // 0: tablet.QueryResponse.results:type_name -> tablet.QueryResult
-	3, // 1: tablet.QueryResult.rows:type_name -> tablet.Row
-	0, // 2: tablet.TabletService.Execute:input_type -> tablet.QueryRequest
-	4, // 3: tablet.TabletService.Health:input_type -> tablet.HealthRequest
-	1, // 4: tablet.TabletService.Execute:output_type -> tablet.QueryResponse
-	5, // 5: tablet.TabletService.Health:output_type -> tablet.HealthResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2,  // 0: tablet.QueryResponse.results:type_name -> tablet.QueryResult
+	3,  // 1: tablet.QueryResult.rows:type_name -> tablet.Row
+	2,  // 2: tablet.PrepareResponse.result:type_name -> tablet.QueryResult
+	0,  // 3: tablet.TabletService.Execute:input_type -> tablet.QueryRequest
+	6,  // 4: tablet.TabletService.Prepare:input_type -> tablet.PrepareRequest
+	8,  // 5: tablet.TabletService.Commit:input_type -> tablet.CommitRequest
+	10, // 6: tablet.TabletService.Rollback:input_type -> tablet.RollbackRequest
+	4,  // 7: tablet.TabletService.Health:input_type -> tablet.HealthRequest
+	1,  // 8: tablet.TabletService.Execute:output_type -> tablet.QueryResponse
+	7,  // 9: tablet.TabletService.Prepare:output_type -> tablet.PrepareResponse
+	9,  // 10: tablet.TabletService.Commit:output_type -> tablet.CommitResponse
+	11, // 11: tablet.TabletService.Rollback:output_type -> tablet.RollbackResponse
+	5,  // 12: tablet.TabletService.Health:output_type -> tablet.HealthResponse
+	8,  // [8:13] is the sub-list for method output_type
+	3,  // [3:8] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_proto_tablet_tablet_proto_init() }
@@ -452,7 +790,7 @@ func file_proto_tablet_tablet_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_tablet_tablet_proto_rawDesc), len(file_proto_tablet_tablet_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

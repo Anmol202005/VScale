@@ -29,6 +29,10 @@ func (c *TabletClient) Close() error {
 	return c.conn.Close()
 }
 
+func (c *TabletClient) String() string {
+	return c.conn.Target()
+}
+
 func (c *TabletClient) Execute(ctx context.Context, req *pb.QueryRequest) (*pb.QueryResponse, error) {
 	return c.client.Execute(ctx, req)
 }
@@ -37,12 +41,19 @@ func (c *TabletClient) Begin(ctx context.Context) (*pb.QueryResponse, error) {
 	return c.Execute(ctx, &pb.QueryRequest{Sql: "BEGIN", TransactionId: 0})
 }
 
-func (c *TabletClient) Commit(ctx context.Context, txID int64) (*pb.QueryResponse, error) {
-	return c.Execute(ctx, &pb.QueryRequest{Sql: "COMMIT", TransactionId: txID})
+// Commit sends the 2PC Commit RPC.
+func (c *TabletClient) Commit(ctx context.Context, txID int64) (*pb.CommitResponse, error) {
+	return c.client.Commit(ctx, &pb.CommitRequest{TransactionId: txID})
 }
 
-func (c *TabletClient) Rollback(ctx context.Context, txID int64) (*pb.QueryResponse, error) {
-	return c.Execute(ctx, &pb.QueryRequest{Sql: "ROLLBACK", TransactionId: txID})
+// Rollback sends the 2PC Rollback RPC.
+func (c *TabletClient) Rollback(ctx context.Context, txID int64) (*pb.RollbackResponse, error) {
+	return c.client.Rollback(ctx, &pb.RollbackRequest{TransactionId: txID})
+}
+
+// Prepare sends the 2PC Prepare RPC.
+func (c *TabletClient) Prepare(ctx context.Context, txID int64) (*pb.PrepareResponse, error) {
+	return c.client.Prepare(ctx, &pb.PrepareRequest{TransactionId: txID})
 }
 
 func (c *TabletClient) Health(ctx context.Context, req *pb.HealthRequest) (*pb.HealthResponse, error) {

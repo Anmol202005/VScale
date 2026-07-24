@@ -70,6 +70,12 @@ gcall() {
   grpcurl -plaintext -d "$data" "$addr" "tablet.TabletService/$method" 2>&1
 }
 
+# Extract transactionId from grpcurl JSON output
+extract_txid() {
+  local json="$1"
+  echo "$json" | jq -r '.transactionId // 0'
+}
+
 PASS=0
 FAIL=0
 check() {
@@ -209,22 +215,101 @@ out=$(gcall "$VTGATE_ADDR" Execute '{"sql":"SELECT * FROM users WHERE name = '"'
 check "non-shard-key WHERE still finds Alice via scatter" "$out" "Alice"
 
 echo ""
-info "-- Transaction control (expected hard error, no session tracking yet) --"
+info "-- Single-shard transaction via vtgate --"
 out=$(gcall "$VTGATE_ADDR" Execute '{"sql":"BEGIN"}')
-check "BEGIN correctly refused" "$out" "not yet supported"
+check "BEGIN succeeds" "$out" "transactionId"
+TXID=$(extract_txid "$out")
+if [ -z "$TXID" ] || [ "$TXID" = "0" ]; then
+  red "  FAIL: could not extract transactionId from BEGIN response"
+  FAIL=$((FAIL+1))
+  exit 1
+fi
+green "  txid=$TXID"
 
-echo ""
-info "-- Insert-routing check: insert via vtgate, verify correct physical shard --"
-out=$(gcall "$VTGATE_ADDR" Execute '{"sql":"INSERT INTO users (id, name) VALUES (100, '"'"'Carol'"'"')"}')
-check "insert id=100 via vtgate succeeds" "$out" "rowsAffected"
-out=$(gcall "$TABLET1_ADDR" Execute '{"sql":"SELECT * FROM users WHERE id = 100"}')
-check "Carol landed in tablet1 (shard-0 owns [0,5000))" "$out" "Carol"
-out=$(gcall "$TABLET2_ADDR" Execute '{"sql":"SELECT * FROM users WHERE id = 100"}')
-if echo "$out" | grep -q "Carol"; then
-  red "  FAIL: Carol should NOT be in tablet2"
+out=$(gcall "$VTGATE_ADDR" Execute "{\"sql\":\"INSERT INTO users (id, name) VALUES (300, 'Charlie')\", \"transactionId\": $TXID}")
+check "INSERT in transaction" "$out" "rowsAffected"
+
+out=$(gcall "$VTGATE_ADDR" Execute "{\"sql\":\"COMMIT\", \"transactionId\": $TXID}")
+check "COMMIT succeeds" "$out" "COMMIT"
+
+# Verify Charlie landed in shard-0 (id=300 in [0,5000))
+out=$(gcall "$TABLET1_ADDR" Execute '{"sql":"SELECT * FROM users WHERE id = 300"}')
+check "Charlie in tablet1" "$out" "Charlie"
+out=$(gcall "$TABLET2_ADDR" Execute '{"sql":"SELECT * FROM users WHERE id = 300"}')
+if echo "$out" | grep -q "Charlie"; then
+  red "  FAIL: Charlie should NOT be in tablet2"
   FAIL=$((FAIL+1))
 else
-  green "  PASS: Carol correctly absent from tablet2"
+  green "  PASS: Charlie correctly absent from tablet2"
+  PASS=$((PASS+1))
+fi
+
+echo ""
+info "-- Single-shard ROLLBACK via vtgate --"
+out=$(gcall "$VTGATE_ADDR" Execute '{"sql":"BEGIN"}')
+TXID=$(extract_txid "$out")
+if [ -z "$TXID" ] || [ "$TXID" = "0" ]; then
+  red "  FAIL: could not extract txid for rollback test"
+  FAIL=$((FAIL+1))
+  exit 1
+fi
+
+out=$(gcall "$VTGATE_ADDR" Execute "{\"sql\":\"INSERT INTO users (id, name) VALUES (301, 'Dave')\", \"transactionId\": $TXID}")
+check "INSERT for rollback" "$out" "rowsAffected"
+
+out=$(gcall "$VTGATE_ADDR" Execute "{\"sql\":\"ROLLBACK\", \"transactionId\": $TXID}")
+check "ROLLBACK succeeds" "$out" "ROLLBACK"
+
+out=$(gcall "$TABLET1_ADDR" Execute '{"sql":"SELECT * FROM users WHERE id = 301"}')
+if echo "$out" | grep -q "Dave"; then
+  red "  FAIL: Dave should NOT exist after rollback"
+  FAIL=$((FAIL+1))
+else
+  green "  PASS: Dave correctly absent after rollback"
+  PASS=$((PASS+1))
+fi
+
+echo ""
+info "-- Multi-shard transaction via vtgate --"
+# Clear tables first
+psql -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -d "$SHARD0_DB" -c "DELETE FROM users;" >/dev/null 2>&1
+psql -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -d "$SHARD1_DB" -c "DELETE FROM users;" >/dev/null 2>&1
+
+out=$(gcall "$VTGATE_ADDR" Execute '{"sql":"BEGIN"}')
+check "BEGIN for multi-shard" "$out" "transactionId"
+TXID=$(extract_txid "$out")
+if [ -z "$TXID" ] || [ "$TXID" = "0" ]; then
+  red "  FAIL: could not extract txid for multi-shard test"
+  FAIL=$((FAIL+1))
+  exit 1
+fi
+
+out=$(gcall "$VTGATE_ADDR" Execute "{\"sql\":\"INSERT INTO users (id, name) VALUES (100, 'Eve')\", \"transactionId\": $TXID}")
+check "INSERT Eve into shard-0" "$out" "rowsAffected"
+
+out=$(gcall "$VTGATE_ADDR" Execute "{\"sql\":\"INSERT INTO users (id, name) VALUES (6000, 'Frank')\", \"transactionId\": $TXID}")
+check "INSERT Frank into shard-1" "$out" "rowsAffected"
+
+out=$(gcall "$VTGATE_ADDR" Execute "{\"sql\":\"COMMIT\", \"transactionId\": $TXID}")
+check "COMMIT multi-shard" "$out" "COMMIT"
+
+out=$(gcall "$TABLET1_ADDR" Execute '{"sql":"SELECT * FROM users WHERE id = 100"}')
+check "Eve in tablet1" "$out" "Eve"
+out=$(gcall "$TABLET2_ADDR" Execute '{"sql":"SELECT * FROM users WHERE id = 6000"}')
+check "Frank in tablet2" "$out" "Frank"
+
+echo ""
+info "-- Insert-routing check: insert via vtgate (autocommit) --"
+out=$(gcall "$VTGATE_ADDR" Execute '{"sql":"INSERT INTO users (id, name) VALUES (200, '\''Grace'\'')"}')
+check "insert id=200 via vtgate succeeds" "$out" "rowsAffected"
+out=$(gcall "$TABLET1_ADDR" Execute '{"sql":"SELECT * FROM users WHERE id = 200"}')
+check "Grace landed in tablet1" "$out" "Grace"
+out=$(gcall "$TABLET2_ADDR" Execute '{"sql":"SELECT * FROM users WHERE id = 200"}')
+if echo "$out" | grep -q "Grace"; then
+  red "  FAIL: Grace should NOT be in tablet2"
+  FAIL=$((FAIL+1))
+else
+  green "  PASS: Grace correctly absent from tablet2"
   PASS=$((PASS+1))
 fi
 

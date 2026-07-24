@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	pb "github.com/Anmol202005/VScale/proto/tablet"
+	"github.com/Anmol202005/VScale/internal/gate/coordinator"
 	"github.com/Anmol202005/VScale/internal/gate/gateway"
 	"github.com/Anmol202005/VScale/internal/gate/router"
+	"github.com/Anmol202005/VScale/internal/gate/session"
 	"github.com/Anmol202005/VScale/internal/topology"
 	"google.golang.org/grpc"
 	"github.com/Anmol202005/VScale/internal/vschema"
@@ -42,7 +45,9 @@ func New(listenAddr string, etcdEndpoints []string, etcdPrefix string, vschemaPa
 		}
 	}()
 
-	gw := gateway.New(r)
+	sm := session.NewManager(300 * time.Second)
+	coord := coordinator.New(r, sm)
+	gw := gateway.New(r, sm, coord)
 	handler := NewVTGateHandler(gw)
 
 	grpcServer := grpc.NewServer()
