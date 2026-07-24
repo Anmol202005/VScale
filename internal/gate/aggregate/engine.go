@@ -86,9 +86,7 @@ func StripForScatter(sql string) (string, error) {
 		Having:   clause.Having,
 		Window:   clause.Window,
 	}
-	for i, e := range clause.Exprs {
-		strippedClause.Exprs[i] = e
-	}
+	copy(strippedClause.Exprs, clause.Exprs)
 
 	stripped := &tree.Select{
 		With:    sel.With,
@@ -230,7 +228,7 @@ func MergeScatterResponses(plan *QueryPlan, resp *pb.QueryResponse) (*pb.QueryRe
 
 	
 	if plan.Distinct {
-		allRows = applyDistinct(cols, allRows)
+		allRows = applyDistinct(allRows)
 	}
 
 	if plan.HasAgg {
@@ -318,7 +316,7 @@ func slicesEqual(a, b []string) bool {
 
 
 
-func applyDistinct(cols []string, rows [][]interface{}) [][]interface{} {
+func applyDistinct( rows [][]interface{}) [][]interface{} {
 	seen := make(map[string]bool)
 	out := make([][]interface{}, 0, len(rows))
 	for _, row := range rows {

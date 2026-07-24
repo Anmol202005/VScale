@@ -44,15 +44,27 @@ func main() {
 		vschemaPath = "./vschema.json"
 	}
 
-	listenAddr := ":" + strconv.Itoa(port)
+	pgwirePortStr := os.Getenv("PGWIRE_PORT")
+	if pgwirePortStr == "" {
+		pgwirePortStr = "5433"
+	}
 
-	srv, err := server.New(listenAddr, etcdEndpoints, etcdPrefix, vschemaPath)
+	adminPortStr := os.Getenv("ADMIN_PORT")
+	if adminPortStr == "" {
+		adminPortStr = "8080"
+	}
+
+	listenAddr := ":" + strconv.Itoa(port)
+	pgwireAddr := ":" + pgwirePortStr
+	adminAddr := ":" + adminPortStr
+
+	srv, err := server.New(listenAddr, etcdEndpoints, etcdPrefix, vschemaPath, pgwireAddr, adminAddr)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}
 	defer srv.Close()
 
-	log.Printf("starting vtgate on port %d, watching etcd prefix %s, vschema %s", port, etcdPrefix, vschemaPath)
+	log.Printf("starting vtgate grpc on port %d, pgwire on port %s, admin on port %s, watching etcd prefix %s, vschema %s", port, pgwirePortStr, adminPortStr, etcdPrefix, vschemaPath)
 	if err := srv.Serve(); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}

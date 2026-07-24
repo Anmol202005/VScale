@@ -261,3 +261,47 @@ func (r *Router) GetShardInfo() string {
 	}
 	return out
 }
+
+type ShardSummary struct {
+	Keyspace      string   `json:"keyspace"`
+	Shard         string   `json:"shard"`
+	KeyRangeStart int64    `json:"key_range_start"`
+	KeyRangeEnd   int64    `json:"key_range_end"`
+	Primary       string   `json:"primary"`
+	Replicas      []string `json:"replicas"`
+}
+
+func (r *Router) GetShardSummary() []ShardSummary {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := make([]ShardSummary, 0, len(r.orderedKeys))
+	for _, key := range r.orderedKeys {
+		g := r.shardGroups[key]
+		if g == nil {
+			continue
+		}
+		replicas := make([]string, 0, len(g.replicas))
+		for _, rep := range g.replicas {
+			replicas = append(replicas, rep.Addr)
+		}
+		primary := ""
+		if g.primary.Addr != "" {
+			primary = g.primary.Addr
+		}
+		out = append(out, ShardSummary{
+			Keyspace:      g.keyspace,
+			Shard:         g.shard,
+			KeyRangeStart: g.keyRangeStart,
+			KeyRangeEnd:   g.keyRangeEnd,
+			Primary:       primary,
+			Replicas:      replicas,
+		})
+	}
+	return out
+}
+
+func (r *Router) ShardCount() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return len(r.orderedKeys)
+}

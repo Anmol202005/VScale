@@ -196,3 +196,52 @@ func (s *Session) String() string {
 	defer s.mu.RUnlock()
 	return fmt.Sprintf("Session{id=%d, state=%d, shards=%v}", s.ID, s.State, s.ShardTxIDs)
 }
+
+func (m *Manager) Count() int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return len(m.sessions)
+}
+
+type SessionSummary struct {
+	ID         int64    `json:"id"`
+	State      string   `json:"state"`
+	Shards     int      `json:"shards"`
+	ShardAddrs []string `json:"shard_addrs"`
+}
+
+type SessionsOverview struct {
+	Count    int              `json:"count"`
+	Sessions []SessionSummary `json:"sessions"`
+}
+
+func (m *Manager) Summary() SessionsOverview {
+	result := SessionsOverview{Sessions: []SessionSummary{}}
+	m.mu.RLock()
+	for _, s := range m.sessions {
+		s.mu.RLock()
+		stateStr := "idle"
+		switch s.State {
+		case InTransaction:
+			stateStr = "in_transaction"
+		case Committed:
+			stateStr = "committed"
+		case RolledBack:
+			stateStr = "rolled_back"
+		}
+		addrs := make([]string, 0, len(s.ShardTxIDs))
+		for addr := range s.ShardTxIDs {
+			addrs = append(addrs, addr)
+		}
+		result.Sessions = append(result.Sessions, SessionSummary{
+			ID:         s.ID,
+			State:      stateStr,
+			Shards:     len(s.ShardTxIDs),
+			ShardAddrs: addrs,
+		})
+		s.mu.RUnlock()
+	}
+	result.Count = len(m.sessions)
+	m.mu.RUnlock()
+	return result
+}
