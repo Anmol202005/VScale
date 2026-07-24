@@ -7,8 +7,10 @@ import (
 	"html/template"
 	"net/http"
 	"runtime"
+	"strings"
 	"time"
 
+	pb "github.com/Anmol202005/VScale/proto/tablet"
 	"github.com/Anmol202005/VScale/internal/gate/gateway"
 	"github.com/Anmol202005/VScale/internal/gate/router"
 	"github.com/Anmol202005/VScale/internal/gate/session"
@@ -44,6 +46,7 @@ func New(addr string, r *router.Router, sm *session.Manager, gw *gateway.Gateway
 	mux.HandleFunc("/api/schema", s.handleSchema)
 	mux.HandleFunc("/api/health", s.handleHealth)
 	mux.HandleFunc("/api/gateway", s.handleGateway)
+	mux.HandleFunc("/api/query", s.handleQuery)
 
 	s.httpServer = &http.Server{
 		Addr:     addr,
@@ -147,6 +150,59 @@ func (s *Server) handleGateway(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, resp)
 }
 
+type queryReq struct {
+	SQL string `json:"sql"`
+}
+
+func (s *Server) handleQuery(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+	var req queryReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		s.writeJSON(w, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	req.SQL = strings.TrimSpace(req.SQL)
+	if req.SQL == "" {
+		s.writeJSON(w, map[string]interface{}{"error": "empty query"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	resp, err := s.gw.Execute(ctx, &pb.QueryRequest{Sql: req.SQL})
+	if err != nil {
+		s.writeJSON(w, map[string]interface{}{"error": err.Error()})
+		return
+	}
+
+	results := make([]map[string]interface{}, 0, len(resp.Results))
+	for _, qr := range resp.Results {
+		cols := make([]string, len(qr.Columns))
+		copy(cols, qr.Columns)
+		rows := make([][]string, 0, len(qr.Rows))
+		for _, row := range qr.Rows {
+			vals := make([]string, len(row.Values))
+			copy(vals, row.Values)
+			rows = append(rows, vals)
+		}
+		results = append(results, map[string]interface{}{
+			"sql":          qr.Sql,
+			"columns":      cols,
+			"rows":         rows,
+			"rows_affected": qr.RowsAffected,
+		})
+	}
+
+	s.writeJSON(w, map[string]interface{}{
+		"results":        results,
+		"transaction_id": resp.TransactionId,
+	})
+}
+
 func (s *Server) writeJSON(w http.ResponseWriter, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(v); err != nil {
@@ -185,7 +241,11 @@ const indexHTML = `<!DOCTYPE html>
 		.empty { color: var(--muted); font-size: .85rem; padding: .5rem 0; }
 		.refresh { cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: .25rem .6rem; border-radius: 4px; font-size: .75rem; }
 		.refresh:hover { color: var(--text); border-color: var(--text); }
+		textarea { width: 100%; min-height: 4.5rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .85rem; padding: .6rem .75rem; resize: vertical; }
+		textarea:focus { outline: none; border-color: var(--ok); }
 		pre { font-size: .78rem; color: var(--muted); overflow-x: auto; }
+		.err { color: var(--bad); font-size: .85rem; }
+		.ok { color: var(--ok); font-size: .85rem; }
 		@media (max-width: 640px) { main { padding: 1rem; } .grid { grid-template-columns: repeat(2, 1fr); } }
 	</style>
 </head>
@@ -198,6 +258,16 @@ const indexHTML = `<!DOCTYPE html>
 	</div>
 </header>
 <main>
+	<section>
+		<h2>SQL Playground</h2>
+		<textarea id="sqlInput" spellcheck="false" placeholder="SELECT * FROM users WHERE id = 1">SELECT * FROM users WHERE id = 1</textarea>
+		<div style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem;">
+			<button class="refresh" onclick="runQuery()">Run</button>
+			<span id="queryStatus" style="font-size:.75rem;color:var(--muted);"></span>
+		</div>
+		<div id="queryResult" style="margin-top:.75rem;"></div>
+	</section>
+
 	<section>
 		<h2>Overview</h2>
 		<div class="grid">
@@ -308,6 +378,47 @@ async function loadSchema() {
 async function loadGateway() {
 	const d = await getSafe('/api/gateway');
 	el('gatewayBox').textContent = d ? JSON.stringify(d, null, 2) : 'Failed to load';
+}
+async function runQuery() {
+	const sql = el('sqlInput').value.trim();
+	if (!sql) return;
+	const status = el('queryStatus');
+	const box = el('queryResult');
+	status.textContent = 'Running...';
+	box.innerHTML = '';
+	try {
+		const r = await fetch('/api/query', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({sql}) });
+		const d = await r.json();
+		if (!r.ok || d.error) {
+			box.innerHTML = '<div class="err">' + escapeHtml(d.error || 'HTTP ' + r.status) + '</div>';
+			status.textContent = '';
+			return;
+		}
+		let h = '';
+		for (const res of arr(d.results)) {
+			const cols = arr(res.columns);
+			const rows = arr(res.rows);
+			if (cols.length && rows.length) {
+				h += '<table><thead><tr>' + cols.map(c => '<th>' + escapeHtml(c) + '</th>').join('') + '</tr></thead><tbody>';
+				for (const row of rows) {
+					h += '<tr>' + arr(row).map(v => '<td>' + escapeHtml(v ?? '') + '</td>').join('') + '</tr>';
+				}
+				h += '</tbody></table>';
+			} else if (res.rows_affected > 0) {
+				h += '<div class="ok">' + res.rows_affected + ' row(s) affected</div>';
+			} else {
+				h += '<div class="empty">No rows returned</div>';
+			}
+		}
+		if (d.transaction_id) {
+			h += '<div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">txid: ' + d.transaction_id + '</div>';
+		}
+		box.innerHTML = h || '<div class="empty">Done</div>';
+		status.textContent = 'OK';
+	} catch (e) {
+		box.innerHTML = '<div class="err">' + escapeHtml(e.message) + '</div>';
+		status.textContent = '';
+	}
 }
 async function loadAll() {
 	await Promise.all([loadHealth(), loadShards(), loadTopology(), loadSessions(), loadSchema(), loadGateway()]);
