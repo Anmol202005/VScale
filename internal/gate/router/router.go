@@ -15,7 +15,6 @@ import (
 	"github.com/Anmol202005/VScale/internal/vschema"
 )
 
-// QueryType classifies a SQL statement as read-only or mutating.
 type QueryType int
 
 const (
@@ -24,15 +23,13 @@ const (
 	QueryTypeWrite
 )
 
-// RouteResult is the output of routing a single statement.
 type RouteResult struct {
 	Tablets   []*client.TabletClient
 	Scatter   bool
 	TxControl bool
-	Write     bool // true if this is a write query
+	Write     bool 
 }
 
-// shardGroup aggregates PRIMARY + REPLICA tablets for one logical shard.
 type shardGroup struct {
 	keyspace      string
 	shard         string
@@ -46,28 +43,22 @@ func (sg *shardGroup) contains(key int64) bool {
 	return key >= sg.keyRangeStart && key < sg.keyRangeEnd
 }
 
-// Router resolves SQL to one or more tablet clients.
-// It supports read-write splitting: reads hit REPLICA tablets unless
-// inside a transaction; writes always hit PRIMARY tablets.
+
+
 type Router struct {
 	mu sync.RWMutex
 
-	// clients maps tablet address → open gRPC connection.
 	clients map[string]*client.TabletClient
 
-	// shardGroups maps "keyspace/shard" → shardGroup metadata.
 	shardGroups map[string]*shardGroup
 
-	// orderedKeys maintains a deterministic iteration order for scatter.
 	orderedKeys []string
 
-	// replicaCursor provides round-robin selection among replicas.
 	replicaCursor atomic.Int64
 
 	vs *vschema.VSchema
 }
 
-// NewRouter creates a router backed by the given vschema.
 func NewRouter(vs *vschema.VSchema) *Router {
 	return &Router{
 		clients:     make(map[string]*client.TabletClient),
@@ -76,15 +67,13 @@ func NewRouter(vs *vschema.VSchema) *Router {
 	}
 }
 
-// Sync reconciles the router's internal state with the latest topology.
-// It is called by the EtcdTopology watcher whenever tablets change.
+
 func (r *Router) Sync(tablets []topology.Tablet) {
 	want := make(map[string]topology.Tablet, len(tablets))
 	for _, t := range tablets {
 		want[t.Addr] = t
 	}
 
-	// Build shard groups from the desired set.
 	newGroups := make(map[string]*shardGroup)
 	for _, t := range want {
 		key := t.Keyspace + "/" + t.Shard
@@ -105,9 +94,8 @@ func (r *Router) Sync(tablets []topology.Tablet) {
 		}
 	}
 
-	// Ensure keyRange bounds are consistent across the group.
 	for key, g := range newGroups {
-		_ = key // used only for map access
+		_ = key 
 		if g.primary.Addr != "" {
 			if g.keyRangeStart == 0 && g.keyRangeEnd == 0 {
 				g.keyRangeStart = g.primary.KeyRangeStart
@@ -124,7 +112,6 @@ func (r *Router) Sync(tablets []topology.Tablet) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	// Close connections for tablets that disappeared.
 	for addr, c := range r.clients {
 		if _, exists := want[addr]; !exists {
 			c.Close()

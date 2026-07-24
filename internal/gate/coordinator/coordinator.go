@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	pb "github.com/Anmol202005/VScale/proto/tablet"
+	"github.com/Anmol202005/VScale/internal/gate/aggregate"
 	"github.com/Anmol202005/VScale/internal/gate/client"
 	"github.com/Anmol202005/VScale/internal/gate/router"
 	"github.com/Anmol202005/VScale/internal/gate/session"
@@ -26,7 +27,6 @@ type Coordinator struct {
 func New(r *router.Router, sm *session.Manager) *Coordinator {
 	return &Coordinator{router: r, sessMgr: sm}
 }
-
 
 func (c *Coordinator) Begin() (*session.Session, error) {
 	sess := c.sessMgr.Create()
@@ -140,6 +140,14 @@ func (c *Coordinator) beginOnTablet(ctx context.Context, tc *client.TabletClient
 }
 
 func (c *Coordinator) executeScatter(ctx context.Context, sess *session.Session, sql string, tablets []*client.TabletClient) (*pb.QueryResponse, error) {
+
+	
+	plan, _ := aggregate.ExtractPlan(sql)
+	execSQL := sql
+	if plan != nil && plan.NeedsShardRewrite() {
+		execSQL, _ = aggregate.StripForScatter(sql)
+	}
+
 	var mu sync.Mutex
 	merged := &pb.QueryResponse{}
 	var firstErr error
@@ -151,7 +159,7 @@ func (c *Coordinator) executeScatter(ctx context.Context, sess *session.Session,
 		addr := tc.String()
 		localTxID, _ := sess.GetLocalTxID(addr)
 		resp, err := tc.Execute(ctx, &pb.QueryRequest{
-			Sql:           sql,
+			Sql:           execSQL,
 			TransactionId: localTxID,
 		})
 		if err != nil {
@@ -170,6 +178,15 @@ func (c *Coordinator) executeScatter(ctx context.Context, sess *session.Session,
 	if firstErr != nil {
 		_ = c.rollbackAll(ctx, sess)
 		return nil, firstErr
+	}
+
+	if plan != nil && (plan.HasAgg || plan.Distinct || len(plan.OrderBy) > 0 || plan.Limit >= 0) {
+		merged, err := aggregate.MergeScatterResponses(plan, merged)
+		if err != nil {
+			_ = c.rollbackAll(ctx, sess)
+			return nil, fmt.Errorf("coordinator: aggregation failed: %w", err)
+		}
+		return merged, nil
 	}
 	return merged, nil
 }

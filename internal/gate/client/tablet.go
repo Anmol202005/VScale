@@ -41,17 +41,14 @@ func (c *TabletClient) Begin(ctx context.Context) (*pb.QueryResponse, error) {
 	return c.Execute(ctx, &pb.QueryRequest{Sql: "BEGIN", TransactionId: 0})
 }
 
-// Commit sends the 2PC Commit RPC.
 func (c *TabletClient) Commit(ctx context.Context, txID int64) (*pb.CommitResponse, error) {
 	return c.client.Commit(ctx, &pb.CommitRequest{TransactionId: txID})
 }
 
-// Rollback sends the 2PC Rollback RPC.
 func (c *TabletClient) Rollback(ctx context.Context, txID int64) (*pb.RollbackResponse, error) {
 	return c.client.Rollback(ctx, &pb.RollbackRequest{TransactionId: txID})
 }
 
-// Prepare sends the 2PC Prepare RPC.
 func (c *TabletClient) Prepare(ctx context.Context, txID int64) (*pb.PrepareResponse, error) {
 	return c.client.Prepare(ctx, &pb.PrepareRequest{TransactionId: txID})
 }

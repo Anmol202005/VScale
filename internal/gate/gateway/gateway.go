@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	ourparser "github.com/Anmol202005/VScale/internal/parser"
+	"github.com/Anmol202005/VScale/internal/gate/aggregate"
 	"github.com/Anmol202005/VScale/internal/gate/coordinator"
 	"github.com/Anmol202005/VScale/internal/gate/router"
 	"github.com/Anmol202005/VScale/internal/gate/session"
@@ -130,14 +131,30 @@ func (g *Gateway) executeAutocommit(ctx context.Context, sql string) (*pb.QueryR
 		return result.Tablets[0].Execute(ctx, &pb.QueryRequest{Sql: sql})
 	}
 
+	
+	
+	plan, _ := aggregate.ExtractPlan(sql)
+	execSQL := sql
+	if plan != nil && plan.NeedsShardRewrite() {
+		execSQL, _ = aggregate.StripForScatter(sql)
+	}
+
 	merged := &pb.QueryResponse{}
 	for _, t := range result.Tablets {
-		resp, err := t.Execute(ctx, &pb.QueryRequest{Sql: sql})
+		resp, err := t.Execute(ctx, &pb.QueryRequest{Sql: execSQL})
 		if err != nil {
 			return nil, fmt.Errorf("gateway: scatter query failed on one tablet: %w", err)
 		}
 		merged.Results = append(merged.Results, resp.Results...)
 	}
+
+	if plan != nil && (plan.HasAgg || plan.Distinct || len(plan.OrderBy) > 0 || plan.Limit >= 0) {
+		merged, err = aggregate.MergeScatterResponses(plan, merged)
+		if err != nil {
+			return nil, fmt.Errorf("gateway: aggregation failed: %w", err)
+		}
+	}
+
 	return merged, nil
 }
 
