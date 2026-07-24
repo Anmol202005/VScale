@@ -31,12 +31,47 @@ A lightweight, PostgreSQL-wire-compatible sharding proxy. VScale sits between yo
 
 ## Quick Start
 
-1. Start etcd.
-2. Configure environment variables (see `.env`).
-3. Start one or more tablets.
-4. Start the gate.
-5. Connect any Postgres client to the gate's `PGWIRE_PORT`.
-6. Open `http://<gate-host>:8080` for the admin panel.
+```bash
+# Terminal 1 — start the full local cluster
+cd scripts && ./start_local.sh
+
+# Terminal 2 — run the feature walkthrough
+./try_it.sh
+```
+
+`start_local.sh` boots everything: etcd, PostgreSQL databases, two shards with a PRIMARY each, and the gate.
+
+`try_it.sh` verifies sharded point-reads, scatter queries, aggregations, insert routing, transactions, and the admin panel.
+
+After that, open your browser at the port printed by the script (default `8080`).
+
+### Admin Panel
+
+The gate exposes a minimal dark-themed web UI that auto-refreshes every 5 seconds:
+
+| Section    | What You See                                           |
+|------------|--------------------------------------------------------|
+| Overview   | Shards, tablets, sessions, goroutines, memory          |
+| Shards     | Per-shard key ranges, primary and replica addresses    |
+| Topology   | All registered tablets with type, cell, and range      |
+| Sessions   | Active sessions and their participating shards         |
+| VSchema    | Keyspace and sharded table definitions                 |
+| Gateway    | Internal component status                              |
+
+### Manual commands
+
+```bash
+# PostgreSQL wire
+psql -h localhost -p 5433 -U vscaleuser -d vscale -c "SELECT COUNT(*) FROM users"
+
+# gRPC
+grpcurl -plaintext -d '{"sql":"SELECT * FROM users WHERE id = 1"}' localhost:50052 tablet.TabletService/Execute
+
+# Admin REST
+curl -s http://localhost:8080/api/health | jq .
+curl -s http://localhost:8080/api/shards | jq .
+curl -s http://localhost:8080/api/topology | jq .
+```
 
 ## Admin Panel
 

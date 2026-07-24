@@ -133,36 +133,48 @@ func (c *Conn) handleQuery(sql string) error {
 		return c.sendError(err)
 	}
 	if len(stmts) == 0 {
-		return c.sendError(fmt.Errorf("empty statement"))
-	}
-
-	stmt := stmts[0]
-
-	if ourparser.IsBegin(stmt) {
-		return c.handleBegin()
-	}
-	if ourparser.IsCommit(stmt) {
-		return c.handleCommit()
-	}
-	if ourparser.IsRollback(stmt) {
-		return c.handleRollback()
-	}
-
-	resp, err := c.gw.Execute(c.ctx, &pb.QueryRequest{Sql: sql, TransactionId: c.txID})
-	if err != nil {
-		return c.sendError(err)
-	}
-
-	if len(resp.Results) == 0 {
 		return c.backend.Send(&pgproto3.EmptyQueryResponse{})
 	}
 
-	for _, qr := range resp.Results {
-		if err := c.sendResult(qr); err != nil {
-			return err
+	for _, stmt := range stmts {
+
+		if ourparser.IsBegin(stmt) {
+			if err := c.handleBegin(); err != nil {
+				return err
+			}
+			continue
+		}
+
+		if ourparser.IsCommit(stmt) {
+			if err := c.handleCommit(); err != nil {
+				return err
+			}
+			continue
+		}
+
+		if ourparser.IsRollback(stmt) {
+			if err := c.handleRollback(); err != nil {
+				return err
+			}
+			continue
+		}
+
+		// Use the raw SQL for this individual statement so routing works.
+		resp, err := c.gw.Execute(c.ctx, &pb.QueryRequest{Sql: stmt.SQL, TransactionId: c.txID})
+		if err != nil {
+			return c.sendError(err)
+		}
+
+		for _, qr := range resp.Results {
+			if err := c.sendResult(qr); err != nil {
+				return err
+			}
 		}
 	}
 
+	if c.txID != 0 {
+		return c.sendReadyForQueryTx()
+	}
 	return c.sendReadyForQuery()
 }
 
@@ -174,10 +186,7 @@ func (c *Conn) handleBegin() error {
 	c.txID = resp.TransactionId
 
 	cc := &pgproto3.CommandComplete{CommandTag: []byte("BEGIN")}
-	if err := c.backend.Send(cc); err != nil {
-		return err
-	}
-	return c.sendReadyForQueryTx()
+	return c.backend.Send(cc)
 }
 
 func (c *Conn) handleCommit() error {
@@ -188,10 +197,7 @@ func (c *Conn) handleCommit() error {
 	c.txID = resp.TransactionId
 
 	cc := &pgproto3.CommandComplete{CommandTag: []byte("COMMIT")}
-	if err := c.backend.Send(cc); err != nil {
-		return err
-	}
-	return c.sendReadyForQuery()
+	return c.backend.Send(cc)
 }
 
 func (c *Conn) handleRollback() error {
@@ -202,15 +208,14 @@ func (c *Conn) handleRollback() error {
 	c.txID = resp.TransactionId
 
 	cc := &pgproto3.CommandComplete{CommandTag: []byte("ROLLBACK")}
-	if err := c.backend.Send(cc); err != nil {
-		return err
-	}
-	return c.sendReadyForQuery()
+	return c.backend.Send(cc)
 }
 
 func (c *Conn) sendResult(qr *pb.QueryResult) error {
+	tag := commandTag(qr.Sql)
+
 	if len(qr.Columns) == 0 {
-		cc := &pgproto3.CommandComplete{CommandTag: []byte(fmt.Sprintf("%s %d", qr.Sql, qr.RowsAffected))}
+		cc := &pgproto3.CommandComplete{CommandTag: []byte(fmt.Sprintf("%s %d", tag, qr.RowsAffected))}
 		return c.backend.Send(cc)
 	}
 
@@ -241,10 +246,6 @@ func (c *Conn) sendResult(qr *pb.QueryResult) error {
 		}
 	}
 
-	tag := qr.Sql
-	if tag == "" {
-		tag = "SELECT"
-	}
 	cc := &pgproto3.CommandComplete{CommandTag: []byte(fmt.Sprintf("%s %d", tag, len(qr.Rows)))}
 	if err := c.backend.Send(cc); err != nil {
 		return err
@@ -296,6 +297,22 @@ func (c *Conn) sendError(err error) error {
 func (c *Conn) close() {
 	c.cancel()
 	c.conn.Close()
+}
+
+func commandTag(sql string) string {
+	sql = strings.ToUpper(strings.TrimSpace(sql))
+	if i := strings.IndexAny(sql, " \t\n\r;("); i > 0 {
+		sql = sql[:i]
+	}
+	if sql == "" {
+		return "SELECT"
+	}
+	switch sql {
+	case "BEGIN", "COMMIT", "ROLLBACK", "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER", "TRUNCATE", "COPY", "SET", "SHOW", "EXPLAIN", "VACUUM":
+		return sql
+	default:
+		return "SELECT"
+	}
 }
 
 func isNetClosed(err error) bool {
