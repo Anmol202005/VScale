@@ -95,7 +95,7 @@ func (c *Coordinator) Execute(ctx context.Context, sess *session.Session, sql st
 		return nil, fmt.Errorf("coordinator: session not in transaction (state=%d)", sess.GetState())
 	}
 
-	result, err := c.router.Route(sql)
+	result, err := c.router.Route(sql, true)
 	if err != nil {
 		return nil, fmt.Errorf("coordinator: routing failed: %w", err)
 	}

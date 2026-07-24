@@ -36,7 +36,7 @@ func (g *Gateway) Execute(ctx context.Context, req *pb.QueryRequest) (*pb.QueryR
 	stmt := stmts[0]
 
 	if ourparser.IsBegin(stmt) {
-		return g.handleBegin(ctx, req.TransactionId)
+		return g.handleBegin(req.TransactionId)
 	}
 	if ourparser.IsCommit(stmt) {
 		return g.handleCommit(ctx, req.TransactionId)
@@ -56,7 +56,7 @@ func (g *Gateway) Execute(ctx context.Context, req *pb.QueryRequest) (*pb.QueryR
 	return g.coordinator.Execute(ctx, sess, req.Sql)
 }
 
-func (g *Gateway) handleBegin(ctx context.Context, txID int64) (*pb.QueryResponse, error) {
+func (g *Gateway) handleBegin(txID int64) (*pb.QueryResponse, error) {
 	if txID != 0 {
 		
 		sess, err := g.sessMgr.Get(txID)
@@ -114,7 +114,7 @@ func (g *Gateway) handleRollback(ctx context.Context, txID int64) (*pb.QueryResp
 }
 
 func (g *Gateway) executeAutocommit(ctx context.Context, sql string) (*pb.QueryResponse, error) {
-	result, err := g.router.Route(sql)
+	result, err := g.router.Route(sql, false)
 	if err != nil {
 		return nil, fmt.Errorf("gateway: routing failed: %w", err)
 	}
@@ -142,7 +142,7 @@ func (g *Gateway) executeAutocommit(ctx context.Context, sql string) (*pb.QueryR
 }
 
 func (g *Gateway) Health(ctx context.Context, req *pb.HealthRequest) (*pb.HealthResponse, error) {
-	result, err := g.router.Route("")
+	result, err := g.router.Route("", false)
 	if err != nil || len(result.Tablets) == 0 {
 		return &pb.HealthResponse{Healthy: false}, nil
 	}
