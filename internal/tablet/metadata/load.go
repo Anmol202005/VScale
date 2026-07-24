@@ -12,8 +12,8 @@ func LoadFromFlags() (*TabletMetadata, error) {
 	grpcPort := flag.Int("grpc_port", 50051, "gRPC port this tablet listens on")
 	pgPort := flag.Int("pg_port", 5432, "postgres port this tablet proxies to")
 	maxConns := flag.Int("pg_max_conns", 20, "max postgres connections this tablet may hold")
-	keyRangeStart := flag.String("key_range_start", "", "optional: sharded key range start")
-	keyRangeEnd := flag.String("key_range_end", "", "optional: sharded key range end")
+	keyRangeStart := flag.Int64("key_range_start", 0, "optional: sharded key range start")
+	keyRangeEnd := flag.Int64("key_range_end", 0, "optional: sharded key range end")
 
 	flag.Parse()
 

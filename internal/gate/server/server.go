@@ -11,6 +11,8 @@ import (
 	"github.com/Anmol202005/VScale/internal/gate/router"
 	"github.com/Anmol202005/VScale/internal/topology"
 	"google.golang.org/grpc"
+	"github.com/Anmol202005/VScale/internal/vschema"
+	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
@@ -21,14 +23,18 @@ type Server struct {
 	cancelWatch context.CancelFunc
 }
 
-func New(listenAddr string, etcdEndpoints []string, etcdPrefix string) (*Server, error) {
+func New(listenAddr string, etcdEndpoints []string, etcdPrefix string, vschemaPath string) (*Server, error) {
+	vs, err := vschema.Load(vschemaPath)
+	if err != nil {
+		return nil, fmt.Errorf("server: %w", err)
+	}
+
 	topo, err := topology.NewEtcdTopology(etcdEndpoints, etcdPrefix)
 	if err != nil {
 		return nil, fmt.Errorf("server: %w", err)
 	}
 
-	r := router.NewRouter()
-
+	r := router.NewRouter(vs)
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		if err := topo.Watch(ctx, r.Sync); err != nil {
@@ -41,6 +47,8 @@ func New(listenAddr string, etcdEndpoints []string, etcdPrefix string) (*Server,
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterTabletServiceServer(grpcServer, handler)
+	
+	reflection.Register(grpcServer)
 
 	return &Server{
 		grpcServer:  grpcServer,

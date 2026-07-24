@@ -50,8 +50,8 @@ type TabletMetadata struct {
 	GRPCPort int
 	PGPort   int
 
-	KeyRangeStart string
-	KeyRangeEnd   string
+	KeyRangeStart int64
+	KeyRangeEnd   int64
 }
 
 func (m *TabletMetadata) Alias() string {

@@ -1,0 +1,6 @@
+{
+  "keyspace": "vscale",
+  "sharded_tables": {
+    "users": "id"
+  }
+}

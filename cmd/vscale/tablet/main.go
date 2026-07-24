@@ -59,6 +59,8 @@ func main() {
 		Shard:    meta.Shard,
 		Type:     meta.Type.String(),
 		Addr:     fmt.Sprintf("%s:%d", meta.Hostname, meta.GRPCPort),
+		KeyRangeStart: meta.KeyRangeStart,
+        KeyRangeEnd:   meta.KeyRangeEnd,
 	}, 10)
 	if err != nil {
 		log.Fatalf("failed to register with etcd: %v", err)

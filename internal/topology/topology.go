@@ -1,11 +1,13 @@
 package topology
 
 type Tablet struct {
-	Cell     string
-	Keyspace string
-	Shard    string
-	Type     string
-	Addr     string
+	Cell          string `json:"cell"`
+	Keyspace      string `json:"keyspace"`
+	Shard         string `json:"shard"`
+	Type          string `json:"type"`
+	Addr          string `json:"addr"`
+	KeyRangeStart int64  `json:"key_range_start"`
+	KeyRangeEnd   int64  `json:"key_range_end"`
 }
 
 type Topology struct {

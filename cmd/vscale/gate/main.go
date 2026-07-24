@@ -39,15 +39,20 @@ func main() {
 		etcdPrefix = "/vscale/tablets/"
 	}
 
+	vschemaPath := os.Getenv("VSCHEMA_PATH")
+	if vschemaPath == "" {
+		vschemaPath = "./vschema.json"
+	}
+
 	listenAddr := ":" + strconv.Itoa(port)
 
-	srv, err := server.New(listenAddr, etcdEndpoints, etcdPrefix)
+	srv, err := server.New(listenAddr, etcdEndpoints, etcdPrefix, vschemaPath)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}
 	defer srv.Close()
 
-	log.Printf("starting vtgate on port %d, watching etcd prefix %s", port, etcdPrefix)
+	log.Printf("starting vtgate on port %d, watching etcd prefix %s, vschema %s", port, etcdPrefix, vschemaPath)
 	if err := srv.Serve(); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}

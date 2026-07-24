@@ -10,6 +10,7 @@ import (
 	"github.com/Anmol202005/VScale/internal/tablet/pool"
 	pb "github.com/Anmol202005/VScale/proto/tablet"
 	"github.com/Anmol202005/VScale/internal/tablet/metadata"
+	"google.golang.org/grpc/reflection"
 )
 type Server struct {
 	grpcServer *grpc.Server
@@ -20,6 +21,7 @@ type Server struct {
 
 func NewServer(port int, connString string, meta *metadata.TabletMetadata) (*Server, error) {
 	grpcServer := grpc.NewServer()
+	reflection.Register(grpcServer)
 	p, err := pool.NewPool(context.Background(), connString, meta.MaxConns)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pool: %w", err)

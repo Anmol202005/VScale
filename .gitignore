@@ -7,3 +7,4 @@ coverage.out
 .idea/
 .vscode/
 .DS_Store
+default.etcd/
